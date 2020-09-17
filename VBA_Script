@@ -1,0 +1,121 @@
+Sub MultiYearStockData()
+    ' LOOP THROUGH ALL SHEETS
+    
+    ' --------------------------------------------
+
+'Declare Ws for the worksheet variable and activate the worksheets
+Dim WS As Worksheet
+    For Each WS In ActiveWorkbook.Worksheets
+    WS.Activate
+        
+        ' Determine the Last Row for each worksheet
+        LastRow = WS.Cells(Rows.Count, 1).End(xlUp).Row
+
+        ' Print the headings for summary section:
+            'Ticker, Yearly Change, Percent Change, Total Stock Volume
+        Cells(1, "I").Value = "Ticker"
+        Cells(1, "J").Value = "Yearly Change"
+        Cells(1, "K").Value = "Percent Change"
+        Cells(1, "L").Value = "Total Stock Volume"
+        
+        ' Change the column width for the new columns in the summary section
+        Columns("I").ColumnWidth = 16
+        Columns("J").ColumnWidth = 16
+        Columns("K").ColumnWidth = 16
+        Columns("L").ColumnWidth = 16
+        
+        ' Make the Summary Table column headers bold
+        Range("I1").Font.Bold = True
+        Range("J1").Font.Bold = True
+        Range("K1").Font.Bold = True
+        Range("L1").Font.Bold = True
+        
+        'Declare variables to hold values for the column, row, and volume
+        Dim Column As Integer
+        Column = 1
+        Dim i As Long
+        Dim Row As Double
+        Row = 2
+        Dim Volume As Double
+        Volume = 0
+        
+        'Declare variables to hold values for these:
+            'Percent_Change, Yearly_Change, Ticker_Name, Opening_Price, Closing_Price
+        Dim Percent_Change As Double
+        Dim Yearly_Change As Double
+        Dim Ticker_Name As String
+        Dim Opening_Price As Double
+        Dim Closing_Price As Double
+
+        
+        'Determine the initial opening price for each stock.
+        Opening_Price = Cells(2, Column + 2).Value
+         
+        ' Loop through all the ticker symbols
+        
+        
+        ' Declare i for the if statements
+        For i = 2 To LastRow
+         
+         ' Formula to see if we are still in the same ticker symbol, then if it is not...
+            If Cells(i + 1, Column).Value <> Cells(i, Column).Value Then
+                
+                ' Determine and set the ticker's name
+                Ticker_Name = Cells(i, Column).Value
+                Cells(Row, Column + 8).Value = Ticker_Name
+                
+                ' Determine and set the closing price
+                Closing_Price = Cells(i, Column + 5).Value
+                
+                'Calculate the Yearly Change
+                Yearly_Change = Closing_Price - Opening_Price
+                Cells(Row, Column + 9).Value = Yearly_Change
+                
+                ' Calculate and add the Percent Change
+                If (Opening_Price = 0 And Closing_Price = 0) Then
+                    Percent_Change = 0
+                ElseIf (Opening_Price = 0 And Closing_Price <> 0) Then
+                    Percent_Change = 1
+                Else
+                    Percent_Change = Yearly_Change / Opening_Price
+                    Cells(Row, Column + 10).Value = Percent_Change
+                    Cells(Row, Column + 10).NumberFormat = "0.00%"
+                End If
+                
+                ' Calculate and add the Total Volume
+                Volume = Volume + Cells(i, Column + 6).Value
+                Cells(Row, Column + 11).Value = Volume
+                
+                ' Add one to the summary table row to move to the next blank cell
+                Row = Row + 1
+                
+                ' Reset the Opening Price to be able to determine the new opening price of next ticker symbol
+                Opening_Price = Cells(i + 1, Column + 2)
+                
+                ' Reset the Volume Total for the next ticker symbol
+                Volume = 0
+            
+            'If cells are part of the same ticker
+            Else
+                Volume = Volume + Cells(i, Column + 6).Value
+            End If
+        Next i
+        
+        ' Determine the Last Row of Yearly Change for active worksheets
+        YearlyChangeLastRow = WS.Cells(Rows.Count, Column + 8).End(xlUp).Row
+        
+        ' Add in the Yearly Change's cell colors using conditional formatting that will highlight
+            'positive change in green and negative change in red
+        For j = 2 To YearlyChangeLastRow
+            If (Cells(j, Column + 9).Value > 0 Or Cells(j, Column + 9).Value = 0) Then
+                Cells(j, Column + 9).Interior.ColorIndex = 10
+            ElseIf Cells(j, Column + 9).Value < 0 Then
+                Cells(j, Column + 9).Interior.ColorIndex = 3
+            End If
+        Next j
+        
+
+        
+    Next WS
+        
+End Sub
